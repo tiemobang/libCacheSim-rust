@@ -17,6 +17,7 @@ A high-performance library for building and running cache simulations
 
 
 ## News
+* **2025 Jan**: **Rust implementation** is now available! See [RUST_README.md](RUST_README.md) for the Rust translation with FIFO, LRU, and Clock algorithms.
 * **2024 Oct**: **S3-FIFO** gets an upgrade! Please try out the new version (the old is now renamed to S3-FIFOv0).
 * **2023 June**: **QDLP** is available now, see [our paper](https://dl.acm.org/doi/10.1145/3593856.3595887) for details.
 * **2023 Oct**: **[S3-FIFO](https://dl.acm.org/doi/10.1145/3600006.3613147)** and **SIEVE(https://sievecache.com)** are available! These are very simple algorithms that are very effective in reducing cache misses. Try them out in libCacheSim and your production!
@@ -27,6 +28,19 @@ A high-performance library for building and running cache simulations
 * a high-performance **cache simulator** for running cache simulations.
 * a high-performance and versatile trace analyzer for **analyzing different cache traces**.
 * a high-performance **library** for building cache simulators.
+
+### Rust Implementation
+A Rust translation of libCacheSim is now available! The Rust version provides:
+* Memory-safe cache implementations (FIFO, LRU, Clock)
+* Type-safe API with comprehensive tests
+* Example programs and documentation
+* See [RUST_README.md](RUST_README.md) and [TRANSLATION_SUMMARY.md](TRANSLATION_SUMMARY.md) for details
+
+To use the Rust version:
+```bash
+cargo test          # Run all tests
+cargo run --example basic_simulation  # Run example
+```
 
 ---
 
