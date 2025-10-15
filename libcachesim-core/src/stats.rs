@@ -33,57 +33,57 @@ impl CacheStats {
             n_insert: AtomicU64::new(0),
         }
     }
-    
+
     /// Get the total number of requests
     pub fn n_req(&self) -> u64 {
         self.n_req.load(Ordering::Relaxed)
     }
-    
+
     /// Get the number of cache hits
     pub fn n_hit(&self) -> u64 {
         self.n_hit.load(Ordering::Relaxed)
     }
-    
+
     /// Get the number of cache misses
     pub fn n_miss(&self) -> u64 {
         self.n_miss.load(Ordering::Relaxed)
     }
-    
+
     /// Get the number of evictions
     pub fn n_evict(&self) -> u64 {
         self.n_evict.load(Ordering::Relaxed)
     }
-    
+
     /// Get the number of insertions
     pub fn n_insert(&self) -> u64 {
         self.n_insert.load(Ordering::Relaxed)
     }
-    
+
     /// Increment request counter
     pub fn inc_req(&self) {
         self.n_req.fetch_add(1, Ordering::Relaxed);
     }
-    
+
     /// Increment hit counter
     pub fn inc_hit(&self) {
         self.n_hit.fetch_add(1, Ordering::Relaxed);
     }
-    
+
     /// Increment miss counter
     pub fn inc_miss(&self) {
         self.n_miss.fetch_add(1, Ordering::Relaxed);
     }
-    
+
     /// Increment eviction counter
     pub fn inc_evict(&self) {
         self.n_evict.fetch_add(1, Ordering::Relaxed);
     }
-    
+
     /// Increment insertion counter
     pub fn inc_insert(&self) {
         self.n_insert.fetch_add(1, Ordering::Relaxed);
     }
-    
+
     /// Calculate hit ratio
     pub fn hit_ratio(&self) -> f64 {
         let n_req = self.n_req();
@@ -93,12 +93,12 @@ impl CacheStats {
             self.n_hit() as f64 / n_req as f64
         }
     }
-    
+
     /// Calculate miss ratio
     pub fn miss_ratio(&self) -> f64 {
         1.0 - self.hit_ratio()
     }
-    
+
     /// Reset all statistics
     pub fn reset(&self) {
         self.n_req.store(0, Ordering::Relaxed);

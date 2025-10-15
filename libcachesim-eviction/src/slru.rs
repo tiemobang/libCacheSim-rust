@@ -62,7 +62,7 @@ impl SlruCache {
         let probation_ratio = probation_ratio.clamp(0.0, 1.0);
         let probation_capacity = (capacity as f64 * probation_ratio) as u64;
         let protected_capacity = capacity - probation_capacity;
-        
+
         SlruCache {
             capacity,
             probation_capacity,
@@ -75,7 +75,7 @@ impl SlruCache {
             stats: CacheStats::new(),
         }
     }
-    
+
     /// Move an object to the protected segment
     fn promote_to_protected(&mut self, obj_id: ObjectId, obj_size: u32) {
         // Remove from probation
@@ -83,17 +83,17 @@ impl SlruCache {
             self.probation_queue.remove(pos);
             self.probation_used -= obj_size as u64;
         }
-        
+
         // Add to protected
         self.protected_queue.push_back(obj_id);
         self.protected_used += obj_size as u64;
-        
+
         // Update segment
         if let Some((_, segment)) = self.objects.get_mut(&obj_id) {
             *segment = Segment::Protected;
         }
     }
-    
+
     /// Move an object to MRU position in protected segment
     fn touch_protected(&mut self, obj_id: ObjectId) {
         if let Some(pos) = self.protected_queue.iter().position(|&id| id == obj_id) {
@@ -101,7 +101,7 @@ impl SlruCache {
             self.protected_queue.push_back(obj_id);
         }
     }
-    
+
     /// Evict from probation segment
     fn evict_from_probation(&mut self) -> Option<ObjectId> {
         if let Some(obj_id) = self.probation_queue.pop_front() {
@@ -113,7 +113,7 @@ impl SlruCache {
         }
         None
     }
-    
+
     /// Demote from protected to probation, then evict from probation
     fn demote_and_evict(&mut self) -> Option<ObjectId> {
         // Move LRU from protected to probation
@@ -126,7 +126,7 @@ impl SlruCache {
                 self.probation_queue.push_back(obj_id);
             }
         }
-        
+
         // Now evict from probation
         self.evict_from_probation()
     }
@@ -135,10 +135,10 @@ impl SlruCache {
 impl Cache for SlruCache {
     fn get(&mut self, req: &Request) -> CacheResult {
         self.stats.inc_req();
-        
+
         if let Some(&(obj_size, segment)) = self.objects.get(&req.obj_id) {
             self.stats.inc_hit();
-            
+
             match segment {
                 Segment::Probation => {
                     // Promote to protected on hit
@@ -149,7 +149,7 @@ impl Cache for SlruCache {
                     self.touch_protected(req.obj_id);
                 }
             }
-            
+
             CacheResult::Hit { obj_size }
         } else {
             self.stats.inc_miss();
@@ -157,18 +157,18 @@ impl Cache for SlruCache {
             CacheResult::Miss
         }
     }
-    
+
     fn insert(&mut self, req: &Request) -> InsertResult {
         // Check if already exists
         if self.objects.contains_key(&req.obj_id) {
             return InsertResult::Inserted;
         }
-        
+
         // Check if object can fit
         if req.obj_size as u64 > self.capacity {
             return InsertResult::Rejected;
         }
-        
+
         // Evict until there's space
         let mut evicted_id = None;
         while self.probation_used + self.protected_used + req.obj_size as u64 > self.capacity {
@@ -185,20 +185,23 @@ impl Cache for SlruCache {
                 break;
             }
         }
-        
+
         // Insert into probation segment
-        self.objects.insert(req.obj_id, (req.obj_size, Segment::Probation));
+        self.objects
+            .insert(req.obj_id, (req.obj_size, Segment::Probation));
         self.probation_queue.push_back(req.obj_id);
         self.probation_used += req.obj_size as u64;
         self.stats.inc_insert();
-        
+
         if let Some(evicted) = evicted_id {
-            InsertResult::Evicted { evicted_id: evicted }
+            InsertResult::Evicted {
+                evicted_id: evicted,
+            }
         } else {
             InsertResult::Inserted
         }
     }
-    
+
     fn evict(&mut self) -> Option<ObjectId> {
         if !self.probation_queue.is_empty() {
             self.evict_from_probation()
@@ -206,7 +209,7 @@ impl Cache for SlruCache {
             self.demote_and_evict()
         }
     }
-    
+
     fn remove(&mut self, obj_id: ObjectId) -> bool {
         if let Some((obj_size, segment)) = self.objects.remove(&obj_id) {
             match segment {
@@ -228,7 +231,7 @@ impl Cache for SlruCache {
             false
         }
     }
-    
+
     fn clear(&mut self) {
         self.objects.clear();
         self.probation_queue.clear();
@@ -236,23 +239,23 @@ impl Cache for SlruCache {
         self.probation_used = 0;
         self.protected_used = 0;
     }
-    
+
     fn size(&self) -> u64 {
         self.probation_used + self.protected_used
     }
-    
+
     fn capacity(&self) -> u64 {
         self.capacity
     }
-    
+
     fn len(&self) -> usize {
         self.objects.len()
     }
-    
+
     fn stats(&self) -> &CacheStats {
         &self.stats
     }
-    
+
     fn reset_stats(&mut self) {
         self.stats.reset();
     }
@@ -261,86 +264,86 @@ impl Cache for SlruCache {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_slru_basic() {
         let mut cache = SlruCache::new(300, 0.33); // ~100 probation, ~200 protected
-        
+
         let req1 = Request::new(1, 100);
         let req2 = Request::new(2, 100);
-        
+
         // First access - miss, goes to probation
         assert_eq!(cache.get(&req1), CacheResult::Miss);
         assert_eq!(cache.len(), 1);
         assert_eq!(cache.objects.get(&1), Some(&(100, Segment::Probation)));
-        
+
         // Second access - hit, promotes to protected
         assert_eq!(cache.get(&req1), CacheResult::Hit { obj_size: 100 });
         assert_eq!(cache.objects.get(&1), Some(&(100, Segment::Protected)));
-        
+
         // Add another object
         assert_eq!(cache.get(&req2), CacheResult::Miss);
         assert_eq!(cache.len(), 2);
     }
-    
+
     #[test]
     fn test_slru_promotion() {
         let mut cache = SlruCache::new(300, 0.33);
-        
+
         let req1 = Request::new(1, 100);
-        
+
         // Insert and check it's in probation
         cache.get(&req1);
         assert_eq!(cache.objects.get(&1), Some(&(100, Segment::Probation)));
         assert_eq!(cache.probation_used, 100);
         assert_eq!(cache.protected_used, 0);
-        
+
         // Access again - should promote to protected
         cache.get(&req1);
         assert_eq!(cache.objects.get(&1), Some(&(100, Segment::Protected)));
         assert_eq!(cache.probation_used, 0);
         assert_eq!(cache.protected_used, 100);
     }
-    
+
     #[test]
     fn test_slru_eviction() {
         let mut cache = SlruCache::new(250, 0.4); // ~100 probation, ~150 protected
-        
+
         let req1 = Request::new(1, 100);
         let req2 = Request::new(2, 100);
         let req3 = Request::new(3, 100);
-        
+
         // Fill probation
         cache.get(&req1);
         assert_eq!(cache.len(), 1);
-        
+
         // Promote req1 to protected
         cache.get(&req1);
-        
+
         // Add req2 (goes to probation)
         cache.get(&req2);
         assert_eq!(cache.len(), 2);
-        
+
         // Add req3 - should evict req2 from probation
         cache.get(&req3);
         assert!(cache.len() <= 2);
-        
+
         // req1 should still be there (in protected)
         assert_eq!(cache.get(&req1), CacheResult::Hit { obj_size: 100 });
     }
-    
+
     #[test]
     fn test_slru_stats() {
         let mut cache = SlruCache::new(200, 0.5);
-        
+
         let req1 = Request::new(1, 100);
         let req2 = Request::new(2, 100);
-        
+
         cache.get(&req1); // miss
         cache.get(&req1); // hit (promotion)
         cache.get(&req2); // miss
         cache.get(&req2); // hit (promotion)
-        
+
         let stats = cache.stats();
         assert_eq!(stats.n_req(), 4);
         assert_eq!(stats.n_hit(), 2);

@@ -7,7 +7,7 @@ pub trait TraceReader: Iterator<Item = Result<Request>> {
     fn n_requests(&self) -> Option<u64> {
         None
     }
-    
+
     /// Reset the reader to the beginning of the trace
     fn reset(&mut self) -> Result<()>;
 }
@@ -35,13 +35,13 @@ impl TraceReaderBuilder {
             format: None,
         }
     }
-    
+
     /// Set the trace format explicitly
     pub fn format(mut self, format: TraceFormat) -> Self {
         self.format = Some(format);
         self
     }
-    
+
     /// Build the trace reader
     ///
     /// If format is not specified, it will be detected from file extension
@@ -56,7 +56,7 @@ impl TraceReaderBuilder {
                 TraceFormat::Csv // Default to CSV
             }
         });
-        
+
         match format {
             TraceFormat::Csv => {
                 let reader = crate::csv_reader::CsvTraceReader::new(&self.path)?;

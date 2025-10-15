@@ -76,7 +76,7 @@ impl LfuCache {
             stats: CacheStats::new(),
         }
     }
-    
+
     /// Find the object with minimum frequency to evict
     fn find_min_frequency_object(&self) -> Option<ObjectId> {
         let mut heap = BinaryHeap::new();
@@ -91,34 +91,36 @@ impl Cache for LfuCache {
     fn get(&mut self, req: &Request) -> CacheResult {
         self.stats.inc_req();
         self.access_counter += 1;
-        
+
         if let Some(entry) = self.objects.get_mut(&req.obj_id) {
             self.stats.inc_hit();
             entry.frequency += 1;
             entry.last_access = self.access_counter;
-            CacheResult::Hit { obj_size: entry.obj_size }
+            CacheResult::Hit {
+                obj_size: entry.obj_size,
+            }
         } else {
             self.stats.inc_miss();
             self.insert(req);
             CacheResult::Miss
         }
     }
-    
+
     fn insert(&mut self, req: &Request) -> InsertResult {
         self.access_counter += 1;
-        
+
         // Check if already exists
         if let Some(entry) = self.objects.get_mut(&req.obj_id) {
             entry.frequency += 1;
             entry.last_access = self.access_counter;
             return InsertResult::Inserted;
         }
-        
+
         // Check if object can fit
         if req.obj_size as u64 > self.capacity {
             return InsertResult::Rejected;
         }
-        
+
         // Evict until there's space
         let mut evicted_id = None;
         while self.used + req.obj_size as u64 > self.capacity && !self.objects.is_empty() {
@@ -126,7 +128,7 @@ impl Cache for LfuCache {
                 evicted_id = Some(evict_id);
             }
         }
-        
+
         // Insert the object
         let entry = LfuEntry {
             obj_id: req.obj_id,
@@ -137,18 +139,20 @@ impl Cache for LfuCache {
         self.objects.insert(req.obj_id, entry);
         self.used += req.obj_size as u64;
         self.stats.inc_insert();
-        
+
         if let Some(evicted) = evicted_id {
-            InsertResult::Evicted { evicted_id: evicted }
+            InsertResult::Evicted {
+                evicted_id: evicted,
+            }
         } else {
             InsertResult::Inserted
         }
     }
-    
+
     fn evict(&mut self) -> Option<ObjectId> {
         // Find object with minimum frequency
         let obj_id = self.find_min_frequency_object()?;
-        
+
         if let Some(entry) = self.objects.remove(&obj_id) {
             self.used -= entry.obj_size as u64;
             self.stats.inc_evict();
@@ -157,7 +161,7 @@ impl Cache for LfuCache {
             None
         }
     }
-    
+
     fn remove(&mut self, obj_id: ObjectId) -> bool {
         if let Some(entry) = self.objects.remove(&obj_id) {
             self.used -= entry.obj_size as u64;
@@ -166,29 +170,29 @@ impl Cache for LfuCache {
             false
         }
     }
-    
+
     fn clear(&mut self) {
         self.objects.clear();
         self.used = 0;
         self.access_counter = 0;
     }
-    
+
     fn size(&self) -> u64 {
         self.used
     }
-    
+
     fn capacity(&self) -> u64 {
         self.capacity
     }
-    
+
     fn len(&self) -> usize {
         self.objects.len()
     }
-    
+
     fn stats(&self) -> &CacheStats {
         &self.stats
     }
-    
+
     fn reset_stats(&mut self) {
         self.stats.reset();
     }
@@ -197,66 +201,66 @@ impl Cache for LfuCache {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_lfu_basic() {
         let mut cache = LfuCache::new(300);
-        
+
         let req1 = Request::new(1, 100);
         let req2 = Request::new(2, 100);
-        
+
         // First access - miss
         assert_eq!(cache.get(&req1), CacheResult::Miss);
         assert_eq!(cache.len(), 1);
         assert_eq!(cache.objects.get(&1).unwrap().frequency, 1);
-        
+
         // Second access - hit, frequency increases
         assert_eq!(cache.get(&req1), CacheResult::Hit { obj_size: 100 });
         assert_eq!(cache.objects.get(&1).unwrap().frequency, 2);
-        
+
         // Add another object
         assert_eq!(cache.get(&req2), CacheResult::Miss);
         assert_eq!(cache.len(), 2);
     }
-    
+
     #[test]
     fn test_lfu_eviction_by_frequency() {
         let mut cache = LfuCache::new(200);
-        
+
         let req1 = Request::new(1, 100);
         let req2 = Request::new(2, 100);
         let req3 = Request::new(3, 100);
-        
+
         // Insert req1 and access it multiple times (high frequency)
         cache.get(&req1); // freq=1
         cache.get(&req1); // freq=2
         cache.get(&req1); // freq=3
-        
+
         // Insert req2 (low frequency)
         cache.get(&req2); // freq=1
-        
+
         assert_eq!(cache.len(), 2);
-        
+
         // Insert req3 - should evict req2 (lowest frequency)
         cache.get(&req3);
         assert!(cache.len() <= 2);
-        
+
         // req1 should still be there (high frequency)
         assert_eq!(cache.get(&req1), CacheResult::Hit { obj_size: 100 });
     }
-    
+
     #[test]
     fn test_lfu_stats() {
         let mut cache = LfuCache::new(200);
-        
+
         let req1 = Request::new(1, 100);
         let req2 = Request::new(2, 100);
-        
+
         cache.get(&req1); // miss
         cache.get(&req1); // hit
         cache.get(&req2); // miss
         cache.get(&req2); // hit
-        
+
         let stats = cache.stats();
         assert_eq!(stats.n_req(), 4);
         assert_eq!(stats.n_hit(), 2);

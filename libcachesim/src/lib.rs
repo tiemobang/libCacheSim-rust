@@ -50,4 +50,3 @@ pub mod prelude {
     pub use libcachesim_eviction::*;
     pub use libcachesim_trace::{TraceReader, TraceReaderBuilder};
 }
-

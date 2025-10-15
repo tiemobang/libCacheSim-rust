@@ -10,3 +10,10 @@ libcachesim-core = { path = "../libcachesim-core" }
 hashbrown = "0.14"
 rand = "0.8"
 
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "cache_benchmarks"
+harness = false
+
