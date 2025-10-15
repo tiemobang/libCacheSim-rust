@@ -22,7 +22,9 @@ pub use libcachesim_core::{
 };
 
 // Re-export eviction algorithms
-pub use libcachesim_eviction::{ClockCache, FifoCache, LruCache, MruCache, RandomCache};
+pub use libcachesim_eviction::{
+    ClockCache, FifoCache, LfuCache, LfudaCache, LruCache, MruCache, RandomCache, SlruCache,
+};
 
 // Convenience prelude module
 pub mod prelude {
