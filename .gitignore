@@ -22,3 +22,9 @@ sftp-config.json
 .lint-logs/
 # Python wheels
 *.whl
+
+
+# Added by cargo
+
+/target
+Cargo.lock
