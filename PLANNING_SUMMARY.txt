@@ -1,0 +1,280 @@
+================================================================================
+  COMPLETE PROJECT PLAN: libCacheSim C to Rust Port
+================================================================================
+
+Created in response to code review feedback requesting "a complete project 
+plan for porting the whole library from C to Rust."
+
+================================================================================
+  DOCUMENTS CREATED
+================================================================================
+
+Total: 5 planning documents, 4,438 lines of comprehensive planning
+
+1. RUST_PORT_PROJECT_PLAN.md (1,266 lines, 32KB)
+   → Master plan covering entire 12-14 month project
+   → 8 phases, module specifications, testing, performance
+   → Timeline, resources, risks, success metrics
+
+2. ARCHITECTURE_DECISIONS.md (635 lines, 16KB)
+   → 18 Architecture Decision Records (ADRs)
+   → Technical rationale for key choices
+   → Pure Rust vs FFI, workspace design, error handling
+
+3. IMPLEMENTATION_ROADMAP.md (1,598 lines, 32KB)
+   → Week-by-week guide (55 weeks)
+   → Concrete tasks with code examples
+   → Deliverables, checkpoints, commands
+
+4. PLANNING_INDEX.md (253 lines, 8KB)
+   → Navigation guide for all planning docs
+   → Quick reference and overview
+   → Review checklist
+
+5. POC_VS_PRODUCTION.md (686 lines, 16KB)
+   → Comparison of POC vs production
+   → Feature evolution details
+   → API, testing, documentation growth
+
+================================================================================
+  PROJECT SCOPE
+================================================================================
+
+Porting from C to Rust:
+  • ~28,000 lines of C/C++ code
+  • 57+ cache eviction algorithms
+  • 10+ trace formats (CSV, binary, LCS, zstd, etc.)
+  • Complete analysis framework (MRC, reuse distance, patterns)
+  • 4 CLI tools (cachesim, mrc, traceanalyzer, traceutils)
+  • ML-based algorithms (GLCache, LRB, LHD)
+  • Custom data structures (Bloom filter, splay tree, etc.)
+
+Timeline: 12-14 months
+Team: 1-2 senior Rust developers
+
+================================================================================
+  TECHNICAL APPROACH
+================================================================================
+
+Key Decisions:
+  ✓ Pure Rust rewrite (not FFI bindings)
+    - Memory safety without garbage collection
+    - Thread safety and fearless concurrency
+    - Modern tooling and ecosystem
+    - No C dependency for users
+
+  ✓ 7-crate workspace for modularity
+    - libcachesim-core: Core types and traits
+    - libcachesim-eviction: 57+ algorithms
+    - libcachesim-datastructures: Custom structures
+    - libcachesim-trace: I/O and formats
+    - libcachesim-analysis: Analysis tools
+    - libcachesim-cli: CLI binaries
+    - libcachesim: Main library (re-exports)
+
+  ✓ Feature flags for optional components
+    - ml: Machine learning (xgboost, ndarray)
+    - async: Async I/O (tokio)
+    - parallel: Parallel processing (rayon)
+    - cli: Command-line tools (clap)
+
+  ✓ Multi-layered testing
+    - Unit tests (~300)
+    - Integration tests (~100)
+    - Property-based tests (~50)
+    - Reference tests vs C version (~50)
+    - Target: >80% coverage
+
+================================================================================
+  8-PHASE IMPLEMENTATION PLAN
+================================================================================
+
+Phase 1: Foundation (Months 1-3)
+  → Core infrastructure
+  → 10+ basic algorithms (FIFO, LRU, Clock, Random, MRU, SLRU, LFU, LFUDA)
+  → CSV and LCS trace reading
+  → Testing framework
+  → CI/CD pipeline
+
+Phase 2: Advanced Algorithms (Months 4-6)
+  → Adaptive: ARC, CAR, TwoQ, LeCaR, Cacheus
+  → Modern FIFO: S3-FIFO, Sieve, SFIFO
+  → Complex: ClockPro, LIRS, QDLP, WTinyLFU, Hyperbolic
+  → Belady variants (optimal algorithms)
+  → 30+ total algorithms
+
+Phase 3: ML Algorithms (Months 7-8)
+  → GLCache with XGBoost
+  → LRB (Learning Relaxed Belady)
+  → LHD (Learning Hyperbolic Discounting)
+  → Feature extraction and training pipelines
+
+Phase 4: Data Structures (Month 9)
+  → Bloom filter
+  → Count-Min Sketch
+  → Splay tree
+  → Hash functions (MurmurHash3, xxHash)
+  → Consistent hashing (Ketama)
+
+Phase 5: Admission & Prefetching (Month 10)
+  → Admission: AdaptSize, Bloom, Size, Probability
+  → Prefetching: OBL, Mithril, PG
+  → Integration framework
+
+Phase 6: Trace Analysis & MRC (Months 11-12)
+  → All trace formats (VSCSI, Oracle, TWR, etc.)
+  → Zstd compression
+  → SHARDS, MiniSim for MRC
+  → Reuse distance, popularity, patterns
+  → Scan detection, working set analysis
+
+Phase 7: CLI Tools (Month 13)
+  → cachesim: Cache simulation
+  → mrc: MRC profiling
+  → traceanalyzer: Trace analysis
+  → traceutils: Format conversion, filtering
+
+Phase 8: Integration & Polish (Month 14)
+  → Cross-validation with C version
+  → Complete documentation
+  → Performance benchmarking
+  → Publish to crates.io
+  → Release v1.0.0
+
+================================================================================
+  SUCCESS CRITERIA
+================================================================================
+
+Functional:
+  ✓ All 57+ eviction algorithms implemented
+  ✓ All trace formats supported
+  ✓ 4 CLI tools working
+  ✓ >80% code coverage
+  ✓ <10 open critical bugs
+
+Performance:
+  ✓ ≥18M requests/sec (90% of C version's 20M)
+  ✓ Memory usage within 20% of C version
+  ✓ Latency p99 <1ms
+
+Quality:
+  ✓ 100% safe Rust (minimal unsafe)
+  ✓ All clippy warnings resolved
+  ✓ rustfmt formatted
+  ✓ API docs >90% coverage
+
+Adoption:
+  ✓ Published to crates.io
+  ✓ Complete user guide
+  ✓ Migration guide from C
+
+================================================================================
+  POC VS PRODUCTION COMPARISON
+================================================================================
+
+Current POC:
+  • 300 lines of code
+  • 3 algorithms (FIFO, LRU, Clock)
+  • 9 unit tests
+  • Basic README
+  • ~2 weeks of work
+
+Planned Production:
+  • ~25,000 lines of code (83x growth)
+  • 57+ algorithms (19x growth)
+  • 500+ tests (56x growth)
+  • Complete documentation (10x growth)
+  • 12-14 months of work
+
+Feature Evolution:
+  ✓ Trace reading: None → 10+ formats
+  ✓ CLI tools: None → 4 complete tools
+  ✓ ML algorithms: None → 3 algorithms
+  ✓ Data structures: None → 6+ custom structures
+  ✓ Analysis: None → Complete framework
+  ✓ Error handling: Basic → Comprehensive with Result types
+  ✓ Stats: Simple → Thread-safe atomic counters
+  ✓ API: Basic → Rich with builders and traits
+
+================================================================================
+  HOW TO REVIEW
+================================================================================
+
+For quick overview:
+  1. Read PLANNING_INDEX.md (this provides navigation)
+  2. Skim RUST_PORT_PROJECT_PLAN.md executive summary
+
+For technical review:
+  1. Review ARCHITECTURE_DECISIONS.md for rationale
+  2. Check IMPLEMENTATION_ROADMAP.md for feasibility
+  3. Examine POC_VS_PRODUCTION.md for evolution
+
+For approval:
+  1. Verify scope is clear and reasonable
+  2. Confirm technical approach is sound
+  3. Check timeline is realistic
+  4. Review resource requirements
+  5. Validate success criteria
+
+================================================================================
+  NEXT STEPS
+================================================================================
+
+Awaiting:
+  → Review and feedback on planning documents
+  → Approval to proceed with Phase 1
+  → Any adjustments to scope or timeline
+
+Upon Approval:
+  → Begin Week 1 tasks (workspace setup, core types)
+  → Establish weekly progress reviews
+  → Start implementation tracking
+  → Set up development environment
+
+================================================================================
+  KEY STRENGTHS OF THIS PLAN
+================================================================================
+
+Comprehensive:
+  • Covers all aspects: technical, testing, docs, timeline
+  • Addresses risks and mitigation
+  • Includes success metrics
+
+Detailed:
+  • Week-by-week breakdown
+  • Code examples and templates
+  • Concrete deliverables
+
+Realistic:
+  • Based on C codebase analysis (~28K lines)
+  • Accounts for complexity (ML algorithms)
+  • Includes buffer time
+
+Professional:
+  • ADRs document decisions
+  • Multiple testing layers
+  • Performance validation plan
+
+Flexible:
+  • Phased approach allows adjustment
+  • Feature flags for optional components
+  • Clear checkpoints for review
+
+================================================================================
+  CONTACT & QUESTIONS
+================================================================================
+
+Questions about:
+  • Scope → See RUST_PORT_PROJECT_PLAN.md Section 1
+  • Technical → See ARCHITECTURE_DECISIONS.md
+  • Implementation → See IMPLEMENTATION_ROADMAP.md
+  • Timeline → See RUST_PORT_PROJECT_PLAN.md Section 9
+
+================================================================================
+  STATUS
+================================================================================
+
+Current: 🟡 Planning Complete - Awaiting Review
+Next: 🔵 Phase 1 Implementation (upon approval)
+
+Last Updated: October 2025
