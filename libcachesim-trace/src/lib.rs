@@ -1,14 +1,13 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+//! libCacheSim Trace I/O
+//!
+//! This crate provides trace reading and writing functionality.
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+mod csv_reader;
+mod error;
+mod lcs_reader;
+mod reader;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use csv_reader::CsvTraceReader;
+pub use error::TraceError;
+pub use lcs_reader::{LcsTraceReader, LcsVersion};
+pub use reader::{TraceFormat, TraceReader, TraceReaderBuilder};

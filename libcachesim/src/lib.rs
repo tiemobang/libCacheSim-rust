@@ -4,6 +4,7 @@
 //!
 //! # Examples
 //!
+//! ## Basic Cache Usage
 //! ```
 //! use libcachesim::{Cache, FifoCache, Request};
 //!
@@ -13,6 +14,20 @@
 //!
 //! let stats = cache.stats();
 //! println!("Hit ratio: {:.2}%", stats.hit_ratio() * 100.0);
+//! ```
+//!
+//! ## Trace-based Simulation
+//! ```no_run
+//! use libcachesim::{Cache, LruCache};
+//! use libcachesim_trace::{TraceReaderBuilder};
+//!
+//! let mut cache = LruCache::new(1024);
+//! let reader = TraceReaderBuilder::new("trace.csv").build().unwrap();
+//!
+//! for result in reader {
+//!     let req = result.unwrap();
+//!     cache.get(&req);
+//! }
 //! ```
 
 // Re-export core types and traits
@@ -26,9 +41,13 @@ pub use libcachesim_eviction::{
     ClockCache, FifoCache, LfuCache, LfudaCache, LruCache, MruCache, RandomCache, SlruCache,
 };
 
+// Re-export trace reading (at top level for convenience)
+pub use libcachesim_trace;
+
 // Convenience prelude module
 pub mod prelude {
     pub use libcachesim_core::{Cache, CacheResult, Request};
     pub use libcachesim_eviction::*;
+    pub use libcachesim_trace::{TraceReader, TraceReaderBuilder};
 }
 
