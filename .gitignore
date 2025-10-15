@@ -22,3 +22,8 @@ sftp-config.json
 .lint-logs/
 # Python wheels
 *.whl
+
+# Rust build artifacts
+/target
+**/target
+Cargo.lock
