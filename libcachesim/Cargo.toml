@@ -1,0 +1,17 @@
+[package]
+name = "libcachesim"
+version = "0.1.0"
+edition = "2021"
+authors = ["libCacheSim Rust Port Team"]
+license = "GPL-3.0"
+description = "A high-performance cache simulation library"
+repository = "https://github.com/tiemobang/libCacheSim-rust"
+
+[dependencies]
+libcachesim-core = { path = "../libcachesim-core" }
+libcachesim-eviction = { path = "../libcachesim-eviction" }
+libcachesim-trace = { path = "../libcachesim-trace" }
+
+[dev-dependencies]
+tempfile = "3.8"
+
