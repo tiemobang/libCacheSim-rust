@@ -14,6 +14,9 @@ mod slru;
 
 // Phase 2: Advanced algorithms
 mod arc;
+mod s3fifo;
+mod sieve;
+mod twoq;
 
 pub use clock::ClockCache;
 pub use fifo::FifoCache;
@@ -26,3 +29,6 @@ pub use slru::SlruCache;
 
 // Phase 2 exports
 pub use arc::ArcCache;
+pub use s3fifo::S3FifoCache;
+pub use sieve::SieveCache;
+pub use twoq::TwoQCache;
