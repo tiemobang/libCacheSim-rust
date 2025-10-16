@@ -40,8 +40,6 @@ pub use libcachesim_core::{
 pub use libcachesim_eviction::{
     // Phase 1: Basic algorithms
     ClockCache, FifoCache, LfuCache, LfudaCache, LruCache, MruCache, RandomCache, SlruCache,
-    // Phase 2: Advanced algorithms
-    ArcCache, CarCache, S3FifoCache, SieveCache, TwoQCache,
 };
 
 // Re-export trace reading (at top level for convenience)

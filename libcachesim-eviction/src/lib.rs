@@ -12,13 +12,6 @@ mod mru;
 mod random;
 mod slru;
 
-// Phase 2: Advanced algorithms
-mod arc;
-mod car;
-mod s3fifo;
-mod sieve;
-mod twoq;
-
 pub use clock::ClockCache;
 pub use fifo::FifoCache;
 pub use lfu::LfuCache;
@@ -27,10 +20,3 @@ pub use lru::LruCache;
 pub use mru::MruCache;
 pub use random::RandomCache;
 pub use slru::SlruCache;
-
-// Phase 2 exports
-pub use arc::ArcCache;
-pub use car::CarCache;
-pub use s3fifo::S3FifoCache;
-pub use sieve::SieveCache;
-pub use twoq::TwoQCache;
